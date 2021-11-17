@@ -2,6 +2,7 @@ import numba
 import numpy as np
 
 import config
+# from four_players import *
 
 utility_func = config.utility_func
 decay_probs = config.decay_probs
@@ -52,7 +53,7 @@ def is_terminal(atom_type_board):
         return True
 
 
-@numba.njit
+@numba.jit
 def do_move(state, i, j, player):
     # If the atom at i,j is a union type, make sure we are placing the value of the union type
     atom_type = state.atom_type[i, j]
@@ -81,18 +82,21 @@ def do_move(state, i, j, player):
 
     return state
 
-
+@numba.njit
 def game_step(state, player: pm.Players, move):
     global decay_probs
     
     if is_terminal(state.atom_type):
-        return state, None
+        return state, player, True
 
     atom_type = state.atom_type[move[0], move[1]]
-    player_for_atom_type = pm.Players(atom_type)
+    player_for_atom_type = pm.map_value_to_enum(atom_type)
     random_player = player
-    if pm.is_union_player(player_for_atom_type):
-        choice = np.random.choice(3, 1, p=decay_probs)[0]
+    if player_for_atom_type is not None and pm.is_union_player(player_for_atom_type):
+        choice = 0
+        with numba.objmode(choice='int64'):
+            choice = np.random.choice(3, 1, p=decay_probs)[0]
+        
         if choice != 0:
             members = pm.get_union_player_members(player_for_atom_type)
             random_player = members[choice - 1]
@@ -107,4 +111,4 @@ def game_step(state, player: pm.Players, move):
     while utilities[pm.get_zero_indexed_player_idx(player)] == 0:
         player = pm.next_player(player)
 
-    return state, player
+    return state, player, is_terminal(state.atom_type)

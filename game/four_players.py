@@ -18,13 +18,35 @@ class FourPlayers(Flag):
     P24 = P2 | P4
     P34 = P3 | P4
 
+# mapping_dict = numba.typed.Dict.empty(
+#     key_type=numba.types.int64, value_type=numba.typeof(FourPlayers.P1)
+# )
+# for p in FourPlayers:
+#     mapping_dict[p.value] = p
+
+@numba.jit
+def map_value_to_enum(value):
+    if value == FourPlayers.P1.value: return FourPlayers.P1
+    if value == FourPlayers.P2.value: return FourPlayers.P2
+    if value == FourPlayers.P3.value: return FourPlayers.P3
+    if value == FourPlayers.P4.value: return FourPlayers.P4
+
+    if value == FourPlayers.P12.value: return FourPlayers.P12
+    if value == FourPlayers.P13.value: return FourPlayers.P13
+    if value == FourPlayers.P14.value: return FourPlayers.P14
+    if value == FourPlayers.P23.value: return FourPlayers.P23
+    if value == FourPlayers.P24.value: return FourPlayers.P24
+    if value == FourPlayers.P34.value: return FourPlayers.P34
+    return None
+
 @numba.njit
 def num_players():
     return 4
 
-# @numba.njit
+@numba.njit
 def get_zero_indexed_player_idx(player):
-    return player.value.bit_length() - 1
+    return int(np.log2(player.value))
+    # return player.value.bit_length() - 1
 
 @numba.njit
 def next_player(player):
