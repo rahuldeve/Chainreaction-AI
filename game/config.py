@@ -1,8 +1,7 @@
-from three_players import *
-from four_players import *
+import four_players as players_module
 
-Players = FourPlayers
-utility_func = four_player_utility
-decay_probs = [0.8, 0.1, 0.1]
+pm = players_module
+utility_func = players_module.utility_func
+decay_probs = [0.6, 0.2, 0.2]
 
-minimax_max_depth = 5
+minimax_max_depth = 3

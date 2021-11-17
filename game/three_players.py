@@ -14,40 +14,41 @@ class ThreePlayers(Flag):
     P23 = P2 | P3
     P13 = P1 | P3
 
-    def get_zero_indexed_player_idx(self):
-        return self.value.bit_length() - 1
+@numba.njit
+def num_players():
+    return 3
 
-    def next_player(self):
-        if self == ThreePlayers.P1:
-            return ThreePlayers.P2
-        if self == ThreePlayers.P2:
-            return ThreePlayers.P3
-        if self == ThreePlayers.P3:
-            return ThreePlayers.P1
+# @numba.njit
+def get_zero_indexed_player_idx(player):
+    return player.value.bit_length() - 1
 
-    def is_union_player(self):
-        return (
-                self == ThreePlayers.P12 or
-                self == ThreePlayers.P23 or
-                self == ThreePlayers.P13
+@numba.njit
+def next_player(player):
+    if player == FourPlayers.P1: return FourPlayers.P2
+    if player == FourPlayers.P2: return FourPlayers.P3
+    if player == FourPlayers.P3: return FourPlayers.P1
+
+@numba.njit
+def is_union_player(player):
+    return (
+                player == FourPlayers.P12 or
+                player == FourPlayers.P23 or
+                player == FourPlayers.P13
         )
 
-    def get_union_player_members(self):
-        if self == ThreePlayers.P12:
-            return ThreePlayers.P1, ThreePlayers.P2
-        if self == ThreePlayers.P23:
-            return ThreePlayers.P2, ThreePlayers.P3
-        if self == ThreePlayers.P13:
-            return ThreePlayers.P1, ThreePlayers.P3
+@numba.njit
+def get_union_player_members(player):
+        if player == FourPlayers.P12:
+            return FourPlayers.P1, FourPlayers.P2
+        if player == FourPlayers.P23:
+            return FourPlayers.P2, FourPlayers.P3
+        if player == FourPlayers.P13:
+            return FourPlayers.P1, FourPlayers.P3
         return None
-
-    @staticmethod
-    def num_players():
-        return 3
 
 
 @numba.njit
-def three_player_utility(atom_type_board):
+def utility_func(atom_type_board):
     utilities = np.zeros(3, dtype=np.float32)
     for i in range(atom_type_board.shape[0]):
         for j in range(atom_type_board.shape[1]):
@@ -57,9 +58,11 @@ def three_player_utility(atom_type_board):
             if p & FourPlayers.P1.value: count += 1
             if p & FourPlayers.P2.value: count += 1
             if p & FourPlayers.P3.value: count += 1
-            
-            if p & ThreePlayers.P1.value: utilities[0] += 1.0 / count
-            if p & ThreePlayers.P2.value: utilities[1] += 1.0 / count
-            if p & ThreePlayers.P3.value: utilities[2] += 1.0 / count
+
+            if p & FourPlayers.P1.value: utilities[0] += 1.0 / count
+            if p & FourPlayers.P2.value: utilities[1] += 1.0 / count
+            if p & FourPlayers.P3.value: utilities[2] += 1.0 / count
 
     return utilities
+
+Players = ThreePlayers

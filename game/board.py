@@ -4,6 +4,7 @@ import numpy as np
 import config
 from positions import Positions
 
+pm = config.pm
 
 @numba.njit
 def get_position(i: int, j: int, width: int, height: int):
@@ -181,7 +182,7 @@ def format_board(board: Board):
         if x == 0:
             return '0'
         else:
-            return config.Players(x).name
+            return pm.Players(x).name
 
     atom_count_board = board.atom_count.astype(str)
     f = np.vectorize(formatter)

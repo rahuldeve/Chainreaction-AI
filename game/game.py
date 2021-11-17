@@ -5,6 +5,7 @@ import config
 
 utility_func = config.utility_func
 decay_probs = config.decay_probs
+pm = config.pm
 
 @numba.njit
 def allowed_moves_jitted(atom_type_board, player_value):
@@ -81,19 +82,19 @@ def do_move(state, i, j, player):
     return state
 
 
-def game_step(state, player, move):
+def game_step(state, player: pm.Players, move):
     global decay_probs
     
     if is_terminal(state.atom_type):
         return state, None
 
     atom_type = state.atom_type[move[0], move[1]]
-    player_for_atom_type = config.Players(atom_type)
+    player_for_atom_type = pm.Players(atom_type)
     random_player = player
-    if player_for_atom_type.is_union_player():
+    if pm.is_union_player(player_for_atom_type):
         choice = np.random.choice(3, 1, p=decay_probs)[0]
         if choice != 0:
-            members = player_for_atom_type.get_union_player_members()
+            members = pm.get_union_player_members(player_for_atom_type)
             random_player = members[choice - 1]
             state.clear_cell(move[0], move[1])
             state.place_atom(move[0], move[1], random_player.value)
@@ -102,8 +103,8 @@ def game_step(state, player, move):
     state = do_move(state, move[0], move[1], random_player)
     # Determine who gets to play next. Look for someone having non zero utility
     utilities = board_utility(state.atom_type)
-    player = player.next_player()
-    while utilities[player.get_zero_indexed_player_idx()] == 0:
-        player = player.next_player()
+    player = pm.next_player(player)
+    while utilities[pm.get_zero_indexed_player_idx(player)] == 0:
+        player = pm.next_player(player)
 
     return state, player

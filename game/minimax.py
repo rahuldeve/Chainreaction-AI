@@ -1,11 +1,12 @@
-from config import *
+import config
 from game import *
 from board import *
 
 decay_probs = config.decay_probs
 max_depth = config.minimax_max_depth
+pm = config.pm
 
-def minimax_step(curr_state: Board, curr_player: Players, depth: int):
+def minimax_step(curr_state: Board, curr_player: pm.Players, depth: int):
     global decay_probs
 
     utilities = board_utility(curr_state.atom_type)
@@ -15,13 +16,13 @@ def minimax_step(curr_state: Board, curr_player: Players, depth: int):
     if depth > max_depth:
         return board_utility(curr_state.atom_type), None
 
-    curr_player_idx = curr_player.get_zero_indexed_player_idx()
+    curr_player_idx = pm.get_zero_indexed_player_idx(curr_player)
 
     if utilities[curr_player_idx] == 0:
         # the player has no more atoms he can control
         # proceed onto the next player in the tree
         # do not increase the depth
-        return minimax_step(curr_state, curr_player.next_player(), depth + 1)
+        return minimax_step(curr_state, pm.next_player(curr_player), depth + 1)
 
     max_player_utility = -1 * np.inf
     max_utilities = None
@@ -33,29 +34,29 @@ def minimax_step(curr_state: Board, curr_player: Players, depth: int):
         row_idx = curr_player_moves[0][i]
         col_idx = curr_player_moves[1][i]
 
-        atom = Players(temp_state.atom_type[row_idx, col_idx])
-        if atom.is_union_player():
-            P_a, P_b = atom.get_union_player_members()
-            avg_utilities = np.zeros(Players.num_players())
+        atom = pm.Players(temp_state.atom_type[row_idx, col_idx])
+        if pm.is_union_player(atom):
+            P_a, P_b = pm.get_union_player_members(atom)
+            avg_utilities = np.zeros(pm.num_players())
 
             # map out the possibilities
             # no change
             next_state = do_move(temp_state.get_copy(), row_idx, col_idx, curr_player)
-            utility, move = minimax_step(next_state, curr_player.next_player(), depth + 1)
+            utility, move = minimax_step(next_state, pm.next_player(curr_player), depth + 1)
             avg_utilities += decay_probs[0] * utility
 
             # P_a change
             next_state = temp_state.get_copy()
             next_state.atom_type[row_idx, col_idx] = P_a.value
             next_state = do_move(next_state, row_idx, col_idx, P_a)
-            utility, move = minimax_step(next_state, curr_player.next_player(), depth + 1)
+            utility, move = minimax_step(next_state, pm.next_player(curr_player), depth + 1)
             avg_utilities += decay_probs[1] * utility
 
             # P_b change
             next_state = temp_state.get_copy()
             next_state.atom_type[row_idx, col_idx] = P_b.value
             next_state = do_move(next_state, row_idx, col_idx, P_b)
-            utility, move = minimax_step(next_state, curr_player.next_player(), depth + 1)
+            utility, move = minimax_step(next_state, pm.next_player(curr_player), depth + 1)
             avg_utilities += decay_probs[2] * utility
 
             if avg_utilities[curr_player_idx] > max_player_utility:
@@ -65,7 +66,7 @@ def minimax_step(curr_state: Board, curr_player: Players, depth: int):
 
         else:
             next_state = do_move(temp_state, row_idx, col_idx, curr_player)
-            utility, move = minimax_step(next_state, curr_player.next_player(), depth + 1)
+            utility, move = minimax_step(next_state, pm.next_player(curr_player), depth + 1)
             if utilities[curr_player_idx] > max_player_utility:
                 max_player_utility = utilities[curr_player_idx]
                 max_utilities = utility
