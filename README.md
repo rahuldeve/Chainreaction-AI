@@ -34,10 +34,10 @@
 
 ## Status
 - [x] Basic Game Framework
-- [ ] Front-end
-- [ ] Flask App
+- [x] Front-end
+- [x] Flask App
 - [x] Expectiminimax
-- [ ] Monte Carlo Tree Search
+- [x] Monte Carlo Tree Search
 - [ ] Reinforcement Learning
-- [ ] Gameplay Evaluation
-- [ ] Final Report
+- [x] Gameplay Evaluation
+- [x] Final Report
